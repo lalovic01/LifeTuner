@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="sr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeTuner - Tracker životnih navika</title>
+
+    <meta name="theme-color" content="#6366F1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="LifeTuner" />
+    <link rel="manifest" href="manifest.json" />
+
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#6366F1",
+              secondary: "#10B981",
+              accent: "#F59E0B",
+              purple: "#8B5CF6",
+              pink: "#EC4899",
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-in-out",
+              "slide-up": "slideUp 0.4s ease-out",
+              "scale-in": "scaleIn 0.3s ease-out",
+              "bounce-soft": "bounceSoft 2s infinite",
+              gradient: "gradient 6s ease infinite",
+            },
+            backdropBlur: {
+              xs: "2px",
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes scaleIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes bounceSoft {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      @keyframes gradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .gradient-bg {
+        background: linear-gradient(-45deg, #6366f1, #8b5cf6, #ec4899, #10b981);
+        background-size: 400% 400%;
+        animation: gradient 6s ease infinite;
+      }
+
+      .glass-effect {
+        backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .neumorphism {
+        box-shadow: 20px 20px 60px #d1d5db, -20px -20px 60px #ffffff;
+      }
+
+      .dark .neumorphism {
+        box-shadow: 20px 20px 60px #1f2937, -20px -20px 60px #374151;
+      }
+
+      .hover-lift {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .hover-lift:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      }
+
+      .progress-ring {
+        transform: rotate(-90deg);
+      }
+
+      .progress-ring circle {
+        transition: stroke-dashoffset 0.5s ease-in-out;
+      }
+
+      /* Navigation Styles */
+      .nav-btn.active {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+      }
+
+      .nav-btn.active span {
+        color: white !important;
+      }
+
+      .nav-btn-mobile.active {
+        color: #6366f1;
+      }
+
+      .nav-btn-mobile.active i,
+      .nav-btn-mobile.active span {
+        color: #6366f1 !important;
+      }
+
+      .nav-btn:hover:not(.active) {
+        background: rgba(99, 102, 241, 0.1);
+      }
+
+      .nav-btn-mobile:hover:not(.active) i,
+      .nav-btn-mobile:hover:not(.active) span {
+        color: #6366f1 !important;
+      }
+
+      /* Daily Motivation Widget Styles */
+      #dailyMotivationWidget .motivation-card {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        color: #1f2937 !important;
+        border: 2px solid rgba(245, 158, 11, 0.3);
+      }
+
+      #dailyMotivationWidget .motivation-card * {
+        color: #1f2937 !important;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900 min-h-screen transition-all duration-500"
+  >
+    <!-- Loading Screen -->
+    <div
+      id="loadingScreen"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary to-purple backdrop-blur-sm"
+    >
+      <div class="text-center text-white">
+        <div
+          class="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-white border-t-transparent animate-spin"
+        ></div>
+        <h2 class="text-2xl font-bold">LifeTuner</h2>
+        <p class="text-sm opacity-80">Učitavanje...</p>
+      </div>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div
+      id="installBanner"
+      class="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-primary to-purple text-white p-4 transform -translate-y-full transition-transform duration-300 hidden"
+    >
+      <div class="flex items-center justify-between max-w-4xl mx-auto">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-download"></i>
+          <span class="font-medium"
+            >Instalirajte LifeTuner aplikaciju za bolje iskustvo!</span
+          >
+        </div>
+        <div class="flex space-x-2">
+          <button
+            id="installApp"
+            class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all"
+          >
+            Instaliraj
+          </button>
+          <button
+            id="dismissInstall"
+            class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-all"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Indicators -->
+    <div class="fixed top-4 left-4 z-30 space-y-2">
+      <!-- Offline Indicator -->
+      <div
+        id="offlineIndicator"
+        class="hidden px-3 py-2 bg-red-500 text-white text-xs rounded-full shadow-lg animate-pulse"
+      >
+        <i class="fas fa-wifi-slash mr-1"></i>Offline
+      </div>
+      <!-- Auto-save Indicator -->
+      <div
+        id="autoSaveIndicator"
+        class="hidden px-3 py-2 bg-green-500 text-white text-xs rounded-full shadow-lg opacity-0 transition-opacity"
+      >
+        <i class="fas fa-save mr-1"></i>Sačuvano
+      </div>
+      <!-- Unsaved Changes -->
+      <div
+        id="unsavedChanges"
+        class="hidden px-3 py-2 bg-amber-500 text-white text-xs rounded-full shadow-lg"
+      >
+        <i class="fas fa-edit mr-1"></i>Nesačuvano
+      </div>
+    </div>
+
+    <!-- Enhanced Onboarding Modal -->
+    <div
+      id="onboardingModal"
+      class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-lg mx-4 transform transition-all duration-500 scale-95 shadow-2xl border border-white border-opacity-20"
+      >
+        <!-- Onboarding content will be dynamically generated -->
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-40 glass-effect backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo -->
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-primary to-purple rounded-xl flex items-center justify-center shadow-lg"
+            >
+              <i class="fas fa-chart-line text-white text-lg"></i>
+            </div>
+            <div>
+              <h1
+                class="text-xl font-bold bg-gradient-to-r from-primary to-purple bg-clip-text text-transparent"
+              >
+                LifeTuner
+              </h1>
+              <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">
+                Tracker navika
+              </p>
+            </div>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <div class="hidden md:flex items-center space-x-1">
+            <button class="nav-btn active group" data-section="dashboard">
+              <div
+                class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300"
+              >
+                <i
+                  class="fas fa-home group-hover:scale-110 transition-transform"
+                ></i>
+                <span class="text-gray-700 dark:text-gray-300">Dashboard</span>
+              </div>
+            </button>
+            <button class="nav-btn group" data-section="analytics">
+              <div
+                class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300"
+              >
+                <i
+                  class="fas fa-chart-bar group-hover:scale-110 transition-transform"
+                ></i>
+                <span class="text-gray-700 dark:text-gray-300">Analitika</span>
+              </div>
+            </button>
+            <button class="nav-btn group" data-section="ai-assistant">
+              <div
+                class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300"
+              >
+                <i
+                  class="fas fa-robot group-hover:scale-110 transition-transform"
+                ></i>
+                <span class="text-gray-700 dark:text-gray-300">AI Coach</span>
+              </div>
+            </button>
+            <button class="nav-btn group" data-section="settings">
+              <div
+                class="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300"
+              >
+                <i
+                  class="fas fa-cog group-hover:scale-110 transition-transform"
+                ></i>
+                <span class="text-gray-700 dark:text-gray-300">Postavke</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Theme Toggle -->
+          <button
+            id="darkModeToggle"
+            class="p-3 rounded-xl bg-white bg-opacity-20 hover:bg-opacity-30 text-gray-700 dark:text-gray-300 transition-all duration-300 hover:scale-110"
+          >
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:block"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <div class="md:hidden border-t border-white border-opacity-20">
+        <div class="flex justify-around py-2">
+          <button class="nav-btn-mobile active group" data-section="dashboard">
+            <div class="flex flex-col items-center p-2">
+              <i
+                class="fas fa-home text-lg group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400"
+              ></i>
+              <span class="text-xs mt-1 text-gray-600 dark:text-gray-400"
+                >Home</span
+              >
+            </div>
+          </button>
+          <button class="nav-btn-mobile group" data-section="analytics">
+            <div class="flex flex-col items-center p-2">
+              <i
+                class="fas fa-chart-bar text-lg group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400"
+              ></i>
+              <span class="text-xs mt-1 text-gray-600 dark:text-gray-400"
+                >Stats</span
+              >
+            </div>
+          </button>
+          <button class="nav-btn-mobile group" data-section="ai-assistant">
+            <div class="flex flex-col items-center p-2">
+              <i
+                class="fas fa-robot text-lg group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400"
+              ></i>
+              <span class="text-xs mt-1 text-gray-600 dark:text-gray-400"
+                >AI</span
+              >
+            </div>
+          </button>
+          <button class="nav-btn-mobile group" data-section="settings">
+            <div class="flex flex-col items-center p-2">
+              <i
+                class="fas fa-cog text-lg group-hover:scale-110 transition-transform text-gray-600 dark:text-gray-400"
+              ></i>
+              <span class="text-xs mt-1 text-gray-600 dark:text-gray-400"
+                >Setup</span
+              >
+            </div>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Progress Indicator -->
+    <div id="formProgressContainer" class="fixed top-20 right-4 z-30 hidden">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-xl border border-gray-200 dark:border-gray-700"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="relative w-12 h-12">
+            <svg class="w-12 h-12 progress-ring">
+              <circle
+                cx="24"
+                cy="24"
+                r="20"
+                stroke="currentColor"
+                stroke-width="3"
+                fill="transparent"
+                class="text-gray-200 dark:text-gray-700"
+              />
+              <circle
+                id="progressCircle"
+                cx="24"
+                cy="24"
+                r="20"
+                stroke="currentColor"
+                stroke-width="3"
+                fill="transparent"
+                class="text-primary"
+                stroke-linecap="round"
+                stroke-dasharray="125.6"
+                stroke-dashoffset="125.6"
+              />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span id="progressPercent" class="text-xs font-bold text-primary"
+                >0%</span
+              >
+            </div>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              Napredak
+            </p>
+            <p
+              id="formProgressText"
+              class="text-xs text-gray-500 dark:text-gray-400"
+            >
+              0% completed
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-8 min-h-screen">
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="container mx-auto px-4 py-8">
+        <div class="max-w-6xl mx-auto space-y-8">
+          <!-- Welcome Header -->
+          <div class="text-center animate-fade-in">
+            <h2
+              class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-purple to-pink bg-clip-text text-transparent mb-4"
+            >
+              Dobrodošli nazad!
+            </h2>
+            <p
+              class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+            >
+              Vreme je da pratimo vaš napredak i optimizujemo vašu dnevnu rutinu
+            </p>
+          </div>
+
+          <!-- Daily Motivation Widget -->
+          <div id="dailyMotivationWidget" class="animate-slide-up">
+            <!-- Daily motivation will be generated here -->
+          </div>
+
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <!-- Streak Card -->
+            <div
+              class="relative overflow-hidden bg-gradient-to-br from-primary to-purple rounded-2xl p-6 text-white hover-lift"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"
+              ></div>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                  <i class="fas fa-fire text-2xl animate-bounce-soft"></i>
+                  <span class="text-xs opacity-80">DNI</span>
+                </div>
+                <div class="text-3xl font-bold" id="streakCounter">0</div>
+                <div class="text-xs opacity-90">Niz dana</div>
+              </div>
+            </div>
+
+            <!-- Energy Card -->
+            <div
+              class="relative overflow-hidden bg-gradient-to-br from-secondary to-green-400 rounded-2xl p-6 text-white hover-lift"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"
+              ></div>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                  <i class="fas fa-bolt text-2xl animate-bounce-soft"></i>
+                  <span class="text-xs opacity-80">AVG</span>
+                </div>
+                <div class="text-3xl font-bold" id="avgEnergyQuick">7.2</div>
+                <div class="text-xs opacity-90">Energija</div>
+              </div>
+            </div>
+
+            <!-- Sleep Card -->
+            <div
+              class="relative overflow-hidden bg-gradient-to-br from-purple to-pink rounded-2xl p-6 text-white hover-lift"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"
+              ></div>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                  <i class="fas fa-moon text-2xl animate-bounce-soft"></i>
+                  <span class="text-xs opacity-80">H</span>
+                </div>
+                <div class="text-3xl font-bold" id="avgSleepQuick">7.5</div>
+                <div class="text-xs opacity-90">Sati sna</div>
+              </div>
+            </div>
+
+            <!-- Mood Card -->
+            <div
+              class="relative overflow-hidden bg-gradient-to-br from-accent to-yellow-400 rounded-2xl p-6 text-white hover-lift"
+            >
+              <div
+                class="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"
+              ></div>
+              <div class="relative">
+                <div class="flex items-center justify-between mb-2">
+                  <i class="fas fa-smile text-2xl animate-bounce-soft"></i>
+                  <span class="text-xs opacity-80">MOOD</span>
+                </div>
+                <div class="text-3xl font-bold" id="avgMoodQuick">😊</div>
+                <div class="text-xs opacity-90">Osećanje</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Selector -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 hover-lift"
+          >
+            <div class="flex items-center justify-between">
+              <div>
+                <h3
+                  class="text-xl font-bold text-gray-900 dark:text-white mb-2"
+                >
+                  <i class="fas fa-calendar-alt text-primary mr-2"></i>
+                  Datum za praćenje
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Izaberite dan za koji želite da unesete podatke
+                </p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <button
+                  id="prevDay"
+                  class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <input
+                  type="date"
+                  id="dateSelector"
+                  class="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+                <button
+                  id="nextDay"
+                  class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Entry Cards -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Sleep Tracking -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-bed text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                    Kvalitet sna
+                  </h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Pratite vaš san za bolje zdravlje
+                  </p>
+                </div>
+              </div>
+
+              <div class="space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      <i class="fas fa-moon mr-1"></i>Spavanje
+                    </label>
+                    <input
+                      type="time"
+                      id="bedTime"
+                      data-field="sleep"
+                      class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      <i class="fas fa-sun mr-1"></i>Buđenje
+                    </label>
+                    <input
+                      type="time"
+                      id="wakeTime"
+                      data-field="sleep"
+                      class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-4"
+                >
+                  <div class="flex items-center justify-between">
+                    <span
+                      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >Ukupno sati sna:</span
+                    >
+                    <span
+                      id="sleepDuration"
+                      class="text-lg font-bold text-indigo-600 dark:text-indigo-400"
+                      >0h 0m</span
+                    >
+                  </div>
+                  <div
+                    id="sleepError"
+                    class="text-red-500 text-xs mt-1 hidden"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mood Tracking -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-smile text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                    Raspoloženje
+                  </h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Kako se osećate danas?
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-5 gap-3">
+                <button class="mood-btn group" data-mood="1">
+                  <div
+                    class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  >
+                    <span class="text-3xl">😢</span>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                    >Loše</span
+                  >
+                </button>
+                <button class="mood-btn group" data-mood="2">
+                  <div
+                    class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  >
+                    <span class="text-3xl">😕</span>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                    >Tužno</span
+                  >
+                </button>
+                <button class="mood-btn group" data-mood="3">
+                  <div
+                    class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  >
+                    <span class="text-3xl">😐</span>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                    >OK</span
+                  >
+                </button>
+                <button class="mood-btn group" data-mood="4">
+                  <div
+                    class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  >
+                    <span class="text-3xl">😊</span>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                    >Dobro</span
+                  >
+                </button>
+                <button class="mood-btn group" data-mood="5">
+                  <div
+                    class="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"
+                  >
+                    <span class="text-3xl">😄</span>
+                  </div>
+                  <span
+                    class="text-xs font-medium text-gray-600 dark:text-gray-400"
+                    >Super</span
+                  >
+                </button>
+              </div>
+              <div
+                id="moodError"
+                class="text-red-500 text-xs mt-2 hidden"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Energy Level -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-bolt text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Nivo energije
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Ocenite vašu energiju od 1 do 10
+                </p>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <div class="relative">
+                <input
+                  type="range"
+                  id="energySlider"
+                  min="1"
+                  max="10"
+                  value="5"
+                  data-field="energy"
+                  class="w-full h-3 bg-gradient-to-r from-red-200 via-yellow-200 to-green-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                />
+                <div
+                  class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2"
+                >
+                  <span>1</span><span>2</span><span>3</span><span>4</span
+                  ><span>5</span> <span>6</span><span>7</span><span>8</span
+                  ><span>9</span><span>10</span>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <div
+                  class="inline-flex items-center space-x-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl px-6 py-3"
+                >
+                  <i
+                    class="fas fa-battery-three-quarters text-green-600 dark:text-green-400"
+                  ></i>
+                  <span
+                    class="text-2xl font-bold text-green-600 dark:text-green-400"
+                    id="energyValue"
+                    >5</span
+                  >
+                  <span class="text-gray-600 dark:text-gray-400">/10</span>
+                </div>
+                <div
+                  id="energyError"
+                  class="text-red-500 text-xs mt-2 hidden"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activities -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-list-check text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Dnevne aktivnosti
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Šta ste radili danas? (možete izabrati više opcija)
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <button class="activity-btn group" data-activity="exercise">
+                <div
+                  class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-dumbbell text-2xl text-red-600 dark:text-red-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Vežbanje</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="coffee">
+                <div
+                  class="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-coffee text-2xl text-amber-600 dark:text-amber-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Kafa</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="social">
+                <div
+                  class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-users text-2xl text-blue-600 dark:text-blue-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Druženje</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="work">
+                <div
+                  class="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-briefcase text-2xl text-purple-600 dark:text-purple-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Rad</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="reading">
+                <div
+                  class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-book text-2xl text-green-600 dark:text-green-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Čitanje</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="meditation">
+                <div
+                  class="w-16 h-16 bg-teal-100 dark:bg-teal-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-leaf text-2xl text-teal-600 dark:text-teal-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Meditacija</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="walk">
+                <div
+                  class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-walking text-2xl text-orange-600 dark:text-orange-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Šetnja</span
+                >
+              </button>
+
+              <button class="activity-btn group" data-activity="screen">
+                <div
+                  class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300"
+                >
+                  <i
+                    class="fas fa-mobile-alt text-2xl text-gray-600 dark:text-gray-400"
+                  ></i>
+                </div>
+                <span
+                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Ekran</span
+                >
+              </button>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="text-center">
+            <button
+              id="saveDayBtn"
+              class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-primary to-purple rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+            >
+              <span
+                class="absolute inset-0 w-full h-full bg-gradient-to-r from-purple to-pink opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              ></span>
+              <i
+                class="fas fa-save mr-3 text-xl group-hover:rotate-12 transition-transform"
+              ></i>
+              <span class="relative">Sačuvaj današnji dan</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analytics" class="container mx-auto px-4 py-8 hidden">
+        <div class="max-w-6xl mx-auto space-y-8">
+          <!-- Modern Header -->
+          <div class="text-center animate-fade-in">
+            <h2
+              class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4"
+            >
+              Analitika & Uvidi
+            </h2>
+            <p
+              class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+            >
+              Analizirajte vaše navike i otkrijte obrasce za bolje zdravlje
+            </p>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-bed text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    Prosečan san
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Poslednih 7 dana
+                  </p>
+                </div>
+              </div>
+              <div
+                class="text-3xl font-bold text-blue-600 dark:text-blue-400"
+                id="avgSleep"
+              >
+                7h 30m
+              </div>
+              <div class="mt-2 flex items-center text-sm">
+                <i class="fas fa-arrow-up text-green-500 mr-1"></i>
+                <span class="text-green-500">+12% od prošle nedelje</span>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-bolt text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    Prosečna energija
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Dnevni protek
+                  </p>
+                </div>
+              </div>
+              <div
+                class="text-3xl font-bold text-green-600 dark:text-green-400"
+                id="avgEnergy"
+              >
+                6.8/10
+              </div>
+              <div class="mt-2 flex items-center text-sm">
+                <i class="fas fa-arrow-up text-green-500 mr-1"></i>
+                <span class="text-green-500">+8% bolje</span>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-smile text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    Raspoloženje
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Dominantno
+                  </p>
+                </div>
+              </div>
+              <div
+                class="text-3xl font-bold text-yellow-600 dark:text-yellow-400"
+                id="bestMood"
+              >
+                😊
+              </div>
+              <div class="mt-2 flex items-center text-sm">
+                <span class="text-gray-600 dark:text-gray-400"
+                  >Pozitivno 72%</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-4">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-star text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    Kvalitet
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Ukupni skor
+                  </p>
+                </div>
+              </div>
+              <div
+                class="text-3xl font-bold text-purple-600 dark:text-purple-400"
+                id="sleepQuality"
+              >
+                Odlično
+              </div>
+              <div class="mt-2 flex items-center text-sm">
+                <span class="text-gray-600 dark:text-gray-400">8.5/10</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time-based Insights -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-clock text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                    Najenergičnije vreme
+                  </h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Optimalno za produktivnost
+                  </p>
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2"
+                  id="energeticTime"
+                >
+                  14:00
+                </div>
+                <div
+                  class="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-4"
+                >
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    <i class="fas fa-lightbulb text-blue-500 mr-2"></i>
+                    Planirajte važne zadatke oko ovog vremena
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4"
+                >
+                  <i class="fas fa-brain text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                    Fokus analiza
+                  </h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Obrasci koncentracije
+                  </p>
+                </div>
+              </div>
+              <div class="text-center">
+                <div
+                  class="text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2"
+                  id="focusPattern"
+                >
+                  Odličan
+                </div>
+                <div
+                  class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4"
+                >
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                    Stabilna koncentracija tokom dana
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3"
+                >
+                  <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Energija tokom nedelje
+                </h3>
+              </div>
+              <canvas id="energyChart"></canvas>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mr-3"
+                >
+                  <i class="fas fa-chart-bar text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Raspoloženje tokom nedelje
+                </h3>
+              </div>
+              <canvas id="moodChart"></canvas>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3"
+                >
+                  <i class="fas fa-chart-pie text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Najčešće aktivnosti
+                </h3>
+              </div>
+              <canvas id="activitiesChart"></canvas>
+            </div>
+
+            <div
+              class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+            >
+              <div class="flex items-center mb-6">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center mr-3"
+                >
+                  <i class="fas fa-clock text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Energija po satima
+                </h3>
+              </div>
+              <canvas id="timeEnergyChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Weekly Patterns -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-calendar-week text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Nedeljni obrasci
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Personalizovani uvidi na osnovu vaših podataka
+                </p>
+              </div>
+            </div>
+            <div
+              id="weeklyInsights"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              <!-- Weekly insights will be generated here -->
+            </div>
+          </div>
+
+          <!-- Insights -->
+          <div
+            class="bg-gradient-to-br from-primary to-purple rounded-2xl shadow-xl p-8 text-white animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-lightbulb text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold">Pametni uvidi</h3>
+                <p class="text-sm opacity-90">AI preporuke za optimizaciju</p>
+              </div>
+            </div>
+            <div id="insights" class="space-y-4">
+              <!-- Insights will be generated here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Assistant Section -->
+      <section id="ai-assistant" class="container mx-auto px-4 py-8 hidden">
+        <div class="max-w-6xl mx-auto space-y-8">
+          <!-- Modern Header -->
+          <div class="text-center animate-fade-in">
+            <h2
+              class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 bg-clip-text text-transparent mb-4"
+            >
+              AI Lični Trener
+            </h2>
+            <p
+              class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+            >
+              Dobijte personalizovane preporuke na osnovu vaših navika i
+              trenutnog stanja
+            </p>
+          </div>
+
+          <!-- Current State -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-heart text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Kako se trenutno osećate?
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Izaberite vaše trenutno stanje za personalizovane preporuke
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <button
+                class="feeling-btn group p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border-2 border-transparent hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300"
+                data-feeling="tired"
+              >
+                <div
+                  class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"
+                >
+                  <i
+                    class="fas fa-bed text-2xl text-blue-600 dark:text-blue-400"
+                  ></i>
+                </div>
+                <span
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Umoran</span
+                >
+                <span
+                  class="block text-xs text-gray-500 dark:text-gray-400 mt-1"
+                  >Trebam odmor</span
+                >
+              </button>
+
+              <button
+                class="feeling-btn group p-6 bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-transparent hover:border-red-300 dark:hover:border-red-600 transition-all duration-300"
+                data-feeling="stressed"
+              >
+                <div
+                  class="w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"
+                >
+                  <i
+                    class="fas fa-exclamation-triangle text-2xl text-red-600 dark:text-red-400"
+                  ></i>
+                </div>
+                <span
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Stresan</span
+                >
+                <span
+                  class="block text-xs text-gray-500 dark:text-gray-400 mt-1"
+                  >Pod pritiskom</span
+                >
+              </button>
+
+              <button
+                class="feeling-btn group p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl border-2 border-transparent hover:border-green-300 dark:hover:border-green-600 transition-all duration-300"
+                data-feeling="energetic"
+              >
+                <div
+                  class="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"
+                >
+                  <i
+                    class="fas fa-bolt text-2xl text-green-600 dark:text-green-400"
+                  ></i>
+                </div>
+                <span
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Energičan</span
+                >
+                <span
+                  class="block text-xs text-gray-500 dark:text-gray-400 mt-1"
+                  >Spreman za akciju</span
+                >
+              </button>
+
+              <button
+                class="feeling-btn group p-6 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-700 dark:to-slate-700 rounded-2xl border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300"
+                data-feeling="unfocused"
+              >
+                <div
+                  class="w-16 h-16 bg-gray-100 dark:bg-gray-600 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform"
+                >
+                  <i
+                    class="fas fa-cloud text-2xl text-gray-600 dark:text-gray-400"
+                  ></i>
+                </div>
+                <span
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >Neskoncentrisano</span
+                >
+                <span
+                  class="block text-xs text-gray-500 dark:text-gray-400 mt-1"
+                  >Teško se fokusiram</span
+                >
+              </button>
+            </div>
+
+            <button
+              id="getRecommendations"
+              class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 !text-dark py-4 px-6 mb-6 font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <i class="fas fa-magic mr-2"></i>
+              <span class="mb-2">Dobij personalizovane preporuke</span>
+            </button>
+
+          <!-- Recommendations -->
+          <div id="recommendationsContainer" class="hidden animate-slide-up">
+            <!-- Recommendations will be dynamically generated -->
+          </div>
+
+          <!-- Daily Motivation -->
+          <div
+            class="bg-gradient-to-br from-accent to-yellow-500 rounded-2xl shadow-xl p-8 !text-white animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-quote-left !text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Dnevna motivacija</h3>
+                <p class="text-sm opacity-90 !text-white">
+                  Inspiracija za vaš dan
+                </p>
+              </div>
+            </div>
+            <blockquote
+              id="dailyMotivation"
+              class="text-xl italic leading-relaxed !text-white"
+            >
+              "Svaki novi dan je prilika da postanete bolja verzija sebe."
+            </blockquote>
+            <div class="mt-4 text-right">
+              <button
+                class="text-sm opacity-75 hover:opacity-100 transition-opacity !text-white"
+              >
+                <i class="fas fa-sync-alt mr-1 !text-white"></i>
+                <span class="!text-white">Nova motivacija</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="container mx-auto px-4 py-8 hidden">
+        <div class="max-w-4xl mx-auto space-y-8">
+          <!-- Modern Header -->
+          <div class="text-center animate-fade-in">
+            <h2
+              class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-600 via-slate-600 to-gray-800 bg-clip-text text-transparent mb-4"
+            >
+              Podešavanja
+            </h2>
+            <p
+              class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+            >
+              Prilagodite aplikaciju prema vašim potrebama i preferencijama
+            </p>
+          </div>
+
+          <!-- Theme Settings -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-palette text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Tema aplikacije
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Izaberite svetlu ili tamnu temu
+                </p>
+              </div>
+            </div>
+            <div
+              class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+            >
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-moon text-gray-600 dark:text-gray-400"></i>
+                <span class="font-medium text-gray-900 dark:text-white"
+                  >Tamni režim</span
+                >
+              </div>
+              <button
+                id="themeToggle"
+                class="relative inline-flex h-6 w-11 items-center rounded-full bg-gray-300 dark:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              >
+                <span
+                  class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform dark:translate-x-6 shadow-lg"
+                ></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-bell text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Podsetnici
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Konfigurišite podsetnike za unos podataka
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+              >
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-toggle-on text-primary"></i>
+                  <span class="font-medium text-gray-900 dark:text-white"
+                    >Omogući podsetnike</span
+                  >
+                </div>
+                <input
+                  type="checkbox"
+                  id="remindersEnabled"
+                  class="w-5 h-5 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:focus:ring-primary dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+              </div>
+
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+              >
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-sun text-amber-500"></i>
+                  <span class="font-medium text-gray-900 dark:text-white"
+                    >Jutarnji podsetnik</span
+                  >
+                </div>
+                <input
+                  type="time"
+                  id="morningReminder"
+                  value="09:00"
+                  class="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+              </div>
+
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+              >
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-moon text-indigo-500"></i>
+                  <span class="font-medium text-gray-900 dark:text-white"
+                    >Večernji podsetnik</span
+                  >
+                </div>
+                <input
+                  type="time"
+                  id="eveningReminder"
+                  value="21:00"
+                  class="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+              </div>
+
+              <div
+                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl"
+              >
+                <div class="flex items-center space-x-3">
+                  <i class="fas fa-calendar-alt text-green-500"></i>
+                  <span class="font-medium text-gray-900 dark:text-white"
+                    >Frekvencija</span
+                  >
+                </div>
+                <select
+                  id="reminderFrequency"
+                  class="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                >
+                  <option value="daily">Dnevno</option>
+                  <option value="weekdays">Radni dani</option>
+                  <option value="weekends">Vikend</option>
+                </select>
+              </div>
+
+              <button
+                id="saveRemindersBtn"
+                class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-save mr-2"></i>Sačuvaj podsetnike
+              </button>
+            </div>
+          </div>
+
+          <!-- Data Management -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-database text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Upravljanje podacima
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Izvezite ili obrišite vaše podatke
+                </p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                id="exportData"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-download mr-2"></i>Izvezi JSON
+              </button>
+              <button
+                id="exportCSV"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-file-csv mr-2"></i>Izvezi CSV
+              </button>
+              <button
+                id="clearData"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-trash mr-2"></i>Obriši sve
+              </button>
+            </div>
+          </div>
+
+          <!-- Goal Setting -->
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-bullseye text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Lični ciljevi
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Postavite ciljeve za bolju motivaciju
+                </p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div class="space-y-2">
+                <label
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <i class="fas fa-bed text-blue-500 mr-2"></i>Ciljni broj sati
+                  sna
+                </label>
+                <input
+                  type="number"
+                  id="sleepGoal"
+                  min="6"
+                  max="12"
+                  value="8"
+                  class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Preporučeno: 7-9 sati
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <i class="fas fa-bolt text-green-500 mr-2"></i>Minimalna
+                  energija (1-10)
+                </label>
+                <input
+                  type="number"
+                  id="energyGoal"
+                  min="1"
+                  max="10"
+                  value="7"
+                  class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Ciljni nivo energije
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <i class="fas fa-dumbbell text-red-500 mr-2"></i>Vežbanja
+                  nedeljno
+                </label>
+                <input
+                  type="number"
+                  id="exerciseGoal"
+                  min="1"
+                  max="7"
+                  value="3"
+                  class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Preporučeno: 3-5 puta
+                </p>
+              </div>
+
+              <div class="space-y-2">
+                <label
+                  class="block text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <i class="fas fa-smile text-yellow-500 mr-2"></i>Cilj
+                  raspoloženja (1-5)
+                </label>
+                <input
+                  type="number"
+                  id="moodGoal"
+                  min="1"
+                  max="5"
+                  value="4"
+                  class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:border-primary focus:ring-0 transition-colors"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  Pozitivno raspoloženje
+                </p>
+              </div>
+            </div>
+            <button
+              id="saveGoalsBtn"
+              class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            >
+              <i class="fas fa-save mr-2"></i>Sačuvaj ciljeve
+            </button>
+          </div>
+
+          <!-- App Info -->
+          <div
+            class="bg-gradient-to-br from-slate-100 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-600 p-8 animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-info-circle text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  O aplikaciji
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Informacije o LifeTuner aplikaciji
+                </p>
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-700 dark:text-gray-300">Verzija</span>
+                <span class="font-semibold text-gray-900 dark:text-white"
+                  >v1.0.0</span
+                >
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-gray-700 dark:text-gray-300"
+                  >Poslednje ažuriranje</span
+                >
+                <span class="font-semibold text-gray-900 dark:text-white"
+                  >Decembar 2024</span
+                >
+              </div>
+              <p
+                class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed"
+              >
+                LifeTuner je kreiran za bolje razumevanje vaših dnevnih obrazaca
+                i optimizaciju rutine. Pratite navike, analizirajte podatke i
+                poboljšajte kvalitet života.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Enhanced Toast Notifications -->
+    <div
+      id="toastContainer"
+      class="fixed top-24 right-4 z-50 space-y-3 max-w-sm"
+    >
+      <!-- Dynamic toasts will be added here -->
+    </div>
+
+    <!-- Enhanced Day Complete Modal -->
+    <div
+      id="dayCompleteModal"
+      class="modal-backdrop fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 flex items-center justify-center hidden"
+    >
+      <div
+        class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-md mx-4 transform transition-all duration-500 scale-95 shadow-2xl animate-scale-in"
+      >
+        <div class="text-center">
+          <div
+            class="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-soft"
+          >
+            <i class="fas fa-check text-3xl text-white"></i>
+          </div>
+          <h2
+            class="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4"
+          >
+            Odličan posao!
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+            Uspešno ste zabeležili sve podatke za danas. Nastavite tako i
+            gradite zdrave navike!
+          </p>
+          <button
+            id="closeDayModal"
+            class="bg-gradient-to-r from-primary to-purple text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            Nastavi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+    <script>
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("loadingScreen").style.display = "none";
+        }, 1500);
+      });
+
+      let app;
+      document.addEventListener("DOMContentLoaded", () => {
+        app = new window.LifeTuner();
+        app.init();
+      });
+    </script>
+  </body>
+</html>
