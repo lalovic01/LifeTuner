@@ -652,13 +652,11 @@
                 >
                   <div class="flex items-center justify-between">
                     <span
-                      class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                      >Ukupno sati sna:</span
+                      class="text-gray-700 dark:text-gray-300">Ukupno sati sna:</span
                     >
                     <span
                       id="sleepDuration"
-                      class="text-lg font-bold text-indigo-600 dark:text-indigo-400"
-                      >0h 0m</span
+                      class="font-bold text-indigo-600 dark:text-indigo-400">0h 0m</span
                     >
                   </div>
                   <div
@@ -669,7 +667,7 @@
               </div>
             </div>
 
-            <!-- Mood Tracking -->
+
             <div
               class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
             >
@@ -1299,7 +1297,7 @@
         </div>
       </section>
 
-      <!-- AI Assistant Section -->
+          <!-- AI Assistant Section -->
       <section id="ai-assistant" class="container mx-auto px-4 py-8 hidden">
         <div class="max-w-6xl mx-auto space-y-8">
           <!-- Modern Header -->
@@ -1433,12 +1431,24 @@
 
           <!-- Recommendations -->
           <div id="recommendationsContainer" class="hidden animate-slide-up">
-            <!-- Recommendations will be dynamically generated -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 mb-8">
+              <div class="flex items-center mb-6">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4">
+                  <i class="fas fa-lightbulb text-white text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-gray-900 dark:text-white">Personalizovane preporuke</h3>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Na osnovu vašeg trenutnog stanja</p>
+                </div>
+              </div>
+              <div id="recommendations" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              </div>
+            </div>
           </div>
 
           <!-- Daily Motivation -->
           <div
-            class="bg-gradient-to-br from-accent to-yellow-500 rounded-2xl shadow-xl p-8 !text-white animate-slide-up"
+            class="bg-gradient-to-br from-accent to-yellow-500 rounded-2xl shadow-xl p-8 text-white animate-slide-up"
           >
             <div class="flex items-center mb-6">
               <div
@@ -1448,7 +1458,7 @@
               </div>
               <div>
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Dnevna motivacija</h3>
-                <p class="text-sm opacity-90 !text-white">
+                <p class="text-sm opacity-90 text-white">
                   Inspiracija za vaš dan
                 </p>
               </div>
@@ -1625,47 +1635,6 @@
             </div>
           </div>
 
-          <!-- Data Management -->
-          <div
-            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
-          >
-            <div class="flex items-center mb-6">
-              <div
-                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4"
-              >
-                <i class="fas fa-database text-white text-xl"></i>
-              </div>
-              <div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
-                  Upravljanje podacima
-                </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                  Izvezite ili obrišite vaše podatke
-                </p>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                id="exportData"
-                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                <i class="fas fa-download mr-2"></i>Izvezi JSON
-              </button>
-              <button
-                id="exportCSV"
-                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                <i class="fas fa-file-csv mr-2"></i>Izvezi CSV
-              </button>
-              <button
-                id="clearData"
-                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                <i class="fas fa-trash mr-2"></i>Obriši sve
-              </button>
-            </div>
-          </div>
-
           <!-- Goal Setting -->
           <div
             class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
@@ -1766,12 +1735,70 @@
                 </p>
               </div>
             </div>
+            
+            <div id="goalProgress" class="mb-6">
+            </div>
+            
             <button
               id="saveGoalsBtn"
               class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
             >
               <i class="fas fa-save mr-2"></i>Sačuvaj ciljeve
             </button>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 hover-lift animate-slide-up"
+          >
+            <div class="flex items-center mb-6">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mr-4"
+              >
+                <i class="fas fa-database text-white text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+                  Upravljanje podacima
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Izvezite, uvezite ili obrišite vaše podatke
+                </p>
+              </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-6">
+              <div id="storageInfo" class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <button
+                id="exportData"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-download mr-2"></i>Izvezi JSON
+              </button>
+              <button
+                id="exportCSV"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-file-csv mr-2"></i>Izvezi CSV
+              </button>
+              <button
+                id="importData"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-upload mr-2"></i>Uvezi
+              </button>
+              <button
+                id="clearData"
+                class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                <i class="fas fa-trash mr-2"></i>Obriši sve
+              </button>
+            </div>
+            
+            <input type="file" id="importFileInput" accept=".json" class="hidden">
           </div>
 
           <!-- App Info -->
