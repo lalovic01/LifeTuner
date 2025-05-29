@@ -45,25 +45,32 @@ export class Onboarding {
       const currentStep = steps[stepIndex];
       content.innerHTML = `
         <div class="text-center">
-          ${currentStep.content}
-          <div class="flex justify-between items-center mt-8">
+          <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-heart text-3xl text-white"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">${
+            currentStep.title
+          }</h2>
+          <div class="mb-8">${currentStep.content}</div>
+          <div class="flex justify-between items-center">
             <div class="flex space-x-2">
               ${steps
                 .map(
-                  (_, i) =>
-                    `<div class="w-3 h-3 rounded-full ${
-                      i === stepIndex ? "bg-primary" : "bg-gray-300"
-                    } transition-colors"></div>`
+                  (_, i) => `
+                <div class="w-3 h-3 rounded-full ${
+                  i === stepIndex ? "bg-primary" : "bg-gray-300"
+                }"></div>
+              `
                 )
                 .join("")}
             </div>
-            <div class="flex space-x-3">
+            <div class="space-x-3">
               ${
                 stepIndex > 0
-                  ? `<button id="onboardingPrev" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">Nazad</button>`
+                  ? `<button id="prevStep" class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition-colors">Nazad</button>`
                   : ""
               }
-              <button id="onboardingNext" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">${
+              <button id="nextStep" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">${
                 currentStep.button
               }</button>
             </div>
@@ -71,26 +78,19 @@ export class Onboarding {
         </div>
       `;
 
-      const nextBtn = document.getElementById("onboardingNext");
-      const prevBtn = document.getElementById("onboardingPrev");
+      if (stepIndex > 0) {
+        content.querySelector("#prevStep").onclick = () =>
+          showStep(stepIndex - 1);
+      }
 
-      nextBtn?.addEventListener("click", () => {
-        if (stepIndex === 1) {
-          this.saveOnboardingGoals();
-        }
-
+      content.querySelector("#nextStep").onclick = () => {
         if (stepIndex < steps.length - 1) {
           showStep(stepIndex + 1);
         } else {
-          this.hideOnboarding();
+          modal.classList.add("hidden");
+          localStorage.setItem("lifetuner_visited", "true");
         }
-      });
-
-      prevBtn?.addEventListener("click", () => {
-        if (stepIndex > 0) {
-          showStep(stepIndex - 1);
-        }
-      });
+      };
     };
 
     modal.classList.remove("hidden");
@@ -99,69 +99,47 @@ export class Onboarding {
 
   getWelcomeStepContent() {
     return `
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-        <i class="fas fa-chart-line text-3xl text-white"></i>
-      </div>
-      <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">Dobrodošli u LifeTuner!</h2>
-      <p class="text-gray-600 dark:text-gray-300 mb-6">Vaš personalni asistent za praćenje navika i poboljšanje životne energije.</p>
+      <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+        LifeTuner je vaš lični asistent za praćenje navika i poboljšanje kvaliteta života. 
+        Svaki dan unosite podatke o snu, raspoloženju, energiji i aktivnostima.
+      </p>
     `;
   }
 
   getGoalsStepContent() {
     return `
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-secondary to-accent rounded-full flex items-center justify-center">
-        <i class="fas fa-target text-3xl text-white"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Postavite svoje ciljeve</h2>
-      <p class="text-gray-600 dark:text-gray-300 mb-6">Definirajte šta želite da postignete:</p>
-      <div class="grid grid-cols-2 gap-4 text-left">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sati sna</label>
-          <input type="number" id="onboardingSleepGoal" value="8" min="6" max="12" 
-                 class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Min. energija</label>
-          <input type="number" id="onboardingEnergyGoal" value="7" min="1" max="10"
-                 class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vežbanja nedeljno</label>
-          <input type="number" id="onboardingExerciseGoal" value="3" min="1" max="7"
-                 class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cilj raspoloženja</label>
-          <input type="number" id="onboardingMoodGoal" value="4" min="1" max="5"
-                 class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-        </div>
+      <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+        Postavite svoje lične ciljeve za san, energiju i aktivnosti. 
+        Ovo će vam pomoći da pratite napredak i ostanete motivisani.
+      </p>
+      <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+        <i class="fas fa-lightbulb text-blue-500 mr-2"></i>
+        <span class="text-sm">Ciljevi se mogu menjati u podešavanjima</span>
       </div>
     `;
   }
 
   getTrackingStepContent() {
     return `
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-        <i class="fas fa-calendar-check text-3xl text-white"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Dnevno praćenje</h2>
-      <p class="text-gray-600 dark:text-gray-300 mb-6">Svaki dan unosićete:</p>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <i class="fas fa-bed text-2xl text-blue-500 mb-2"></i>
-          <div class="font-medium">San</div>
+      <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+        Svaki dan unesite podatke o:
+      </p>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-bed text-blue-500"></i>
+          <span>Kvalitet sna</span>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <i class="fas fa-smile text-2xl text-yellow-500 mb-2"></i>
-          <div class="font-medium">Raspoloženje</div>
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-smile text-yellow-500"></i>
+          <span>Raspoloženje</span>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <i class="fas fa-bolt text-2xl text-green-500 mb-2"></i>
-          <div class="font-medium">Energija</div>
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-bolt text-green-500"></i>
+          <span>Nivo energije</span>
         </div>
-        <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <i class="fas fa-dumbbell text-2xl text-red-500 mb-2"></i>
-          <div class="font-medium">Aktivnosti</div>
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-dumbbell text-red-500"></i>
+          <span>Aktivnosti</span>
         </div>
       </div>
     `;
@@ -169,27 +147,21 @@ export class Onboarding {
 
   getAnalyticsStepContent() {
     return `
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-        <i class="fas fa-chart-bar text-3xl text-white"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Analitika i uvidi</h2>
-      <p class="text-gray-600 dark:text-gray-300 mb-6">Pratite svoje obrasce:</p>
-      <div class="space-y-3">
-        <div class="flex items-center space-x-3">
-          <i class="fas fa-clock text-primary"></i>
+      <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+        Analizirajte svoje obrasce i otkrijte šta utiče na vaše blagostanje:
+      </p>
+      <div class="space-y-2 text-sm text-left">
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-chart-line text-purple-500"></i>
+          <span>Trendovi energije i raspoloženja</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-clock text-blue-500"></i>
           <span>Najenergičnije vreme dana</span>
         </div>
-        <div class="flex items-center space-x-3">
-          <i class="fas fa-brain text-primary"></i>
-          <span>Obrasci koncentracije</span>
-        </div>
-        <div class="flex items-center space-x-3">
-          <i class="fas fa-trophy text-primary"></i>
-          <span>Napredak ka ciljevima</span>
-        </div>
-        <div class="flex items-center space-x-3">
-          <i class="fas fa-robot text-primary"></i>
-          <span>Personalizovane preporuke</span>
+        <div class="flex items-center space-x-2">
+          <i class="fas fa-brain text-green-500"></i>
+          <span>Pametni uvidi i preporuke</span>
         </div>
       </div>
     `;
@@ -197,14 +169,12 @@ export class Onboarding {
 
   getFinalStepContent() {
     return `
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-        <i class="fas fa-rocket text-3xl text-white"></i>
-      </div>
-      <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Spremni ste!</h2>
-      <p class="text-gray-600 dark:text-gray-300 mb-6">Počnite svoju putanju ka boljim navikama već danas!</p>
-      <div class="bg-gradient-to-r from-primary to-secondary text-white p-4 rounded-lg">
-        <div class="text-lg font-semibold">Vaš prvi cilj:</div>
-        <div class="text-sm opacity-90">Unesite podatke za današnji dan</div>
+      <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
+        Sve je spremno! Počnite sa unosom podataka već danas i gradite zdrave navike korak po korak.
+      </p>
+      <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+        <span class="text-sm font-medium">Tip: Konzistentnost je ključ uspeha!</span>
       </div>
     `;
   }
