@@ -363,20 +363,25 @@ export class Analytics {
   }
 
   generateInsights(days) {
-    const container = document.getElementById("insights");
-    container.innerHTML = "";
-
     const insights = [];
+    const energyData = days
+      .filter((d) => d.energy)
+      .map((d) => parseFloat(d.energy));
+    const sleepData = days.filter((d) => d.bedTime && d.wakeTime);
+    const moodData = days.filter((d) => d.mood).map((d) => parseInt(d.mood));
+    const activityData = days.filter(
+      (d) => d.activities && d.activities.length > 0
+    );
 
-    const energyData = days.filter((d) => d.energy).map((d) => d.energy);
     if (energyData.length > 0) {
       const avgEnergy =
         energyData.reduce((a, b) => a + b, 0) / energyData.length;
+
       if (avgEnergy < 5) {
         insights.push({
           icon: "fa-battery-quarter",
           title: "Niska energija",
-          text: "Vaš prosečan nivo energije je ispod 5. Razmislite o boljim navikama spavanja i ishrane.",
+          text: "Vaš prosečni nivo energije je nizak. Razmislite o boljim navikama spavanja i ishrane.",
           color: "text-red-500",
         });
       } else if (avgEnergy >= 7) {
@@ -385,6 +390,75 @@ export class Analytics {
           title: "Odlična energija",
           text: "Vaš nivo energije je odličan! Nastavite sa trenutnim navikama.",
           color: "text-green-500",
+        });
+      }
+    }
+
+    if (sleepData.length > 0) {
+      const avgSleep =
+        sleepData.reduce((sum, day) => {
+          const hours = this.calculateSleepHours(day.bedTime, day.wakeTime);
+          return sum + hours;
+        }, 0) / sleepData.length;
+
+      if (avgSleep < 7) {
+        insights.push({
+          icon: "fa-bed",
+          title: "Nedovoljan san",
+          text: `Prosečno spavate ${avgSleep.toFixed(
+            1
+          )}h. Preporučuje se 7-9 sati sna.`,
+          color: "text-orange-500",
+        });
+      } else if (avgSleep > 9) {
+        insights.push({
+          icon: "fa-clock",
+          title: "Previše sna",
+          text: "Možda spavate više nego što je potrebno. Pokušajte sa kraćim spavanjem.",
+          color: "text-blue-500",
+        });
+      }
+    }
+
+    if (moodData.length > 0) {
+      const avgMood = moodData.reduce((a, b) => a + b, 0) / moodData.length;
+      const lowMoodDays = moodData.filter((m) => m <= 2).length;
+
+      if (lowMoodDays > days.length * 0.3) {
+        insights.push({
+          icon: "fa-heart",
+          title: "Obratite pažnju na raspoloženje",
+          text: "Često imate loše raspoloženje. Razmislite o razgovoru sa stručnjakom.",
+          color: "text-red-500",
+        });
+      } else if (avgMood >= 4) {
+        insights.push({
+          icon: "fa-smile",
+          title: "Pozitivno raspoloženje",
+          text: "Vaše raspoloženje je uglavnom pozitivno. Odličan posao!",
+          color: "text-green-500",
+        });
+      }
+    }
+
+    if (activityData.length > 0) {
+      const exerciseDays = days.filter(
+        (d) => d.activities && d.activities.includes("exercise")
+      ).length;
+
+      if (exerciseDays < 2) {
+        insights.push({
+          icon: "fa-dumbbell",
+          title: "Više fizičke aktivnosti",
+          text: "Dodajte više vežbanja u svoju rutinu za bolju energiju i raspoloženje.",
+          color: "text-purple-500",
+        });
+      } else if (exerciseDays >= 4) {
+        insights.push({
+          icon: "fa-trophy",
+          title: "Odlična fizička aktivnost",
+          text: "Redovno vežbate! To pozitivno utiče na vašu energiju.",
+          color: "text-yellow-500",
         });
       }
     }
@@ -398,26 +472,148 @@ export class Analytics {
       });
     }
 
-    insights.forEach((insight) => {
-      const div = document.createElement("div");
-      div.className =
-        "flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg";
-      div.innerHTML = `
-        <i class="fas ${insight.icon} text-xl ${insight.color} mt-1"></i>
-        <div>
-          <h4 class="font-semibold text-gray-800 dark:text-white">${insight.title}</h4>
-          <p class="text-gray-600 dark:text-gray-300">${insight.text}</p>
+    const container =
+      document.getElementById("weeklyInsights") ||
+      document.getElementById("insights");
+    if (container) {
+      container.innerHTML = insights
+        .map(
+          (insight) => `
+        <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <i class="fas ${insight.icon} text-xl ${insight.color} mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-gray-800 dark:text-white">${insight.title}</h4>
+            <p class="text-gray-600 dark:text-gray-300">${insight.text}</p>
+          </div>
         </div>
-      `;
-      container.appendChild(div);
-    });
+      `
+        )
+        .join("");
+    }
+
+    return insights;
   }
 
-  analyzeTimeBasedPatterns(days) {
-    const weeklyInsightsEl = document.getElementById("weeklyInsights");
-    if (!weeklyInsightsEl) return;
+  calculateSleepHours(bedTime, wakeTime) {
+    if (!bedTime || !wakeTime) return 0;
 
-    weeklyInsightsEl.innerHTML =
-      '<p class="text-sm text-gray-600 dark:text-gray-400">Analiza nedeljnih obrazaca u toku...</p>';
+    const bed = new Date(`2000-01-01 ${bedTime}`);
+    let wake = new Date(`2000-01-01 ${wakeTime}`);
+
+    if (wake < bed) {
+      wake.setDate(wake.getDate() + 1);
+    }
+
+    return (wake - bed) / (1000 * 60 * 60);
+  }
+
+  getEnergyTrends(data) {
+    const trends = {
+      improving: 0,
+      declining: 0,
+      stable: 0,
+    };
+
+    for (let i = 1; i < data.length; i++) {
+      const current = parseFloat(data[i].energy || 0);
+      const previous = parseFloat(data[i - 1].energy || 0);
+
+      if (current > previous + 0.5) trends.improving++;
+      else if (current < previous - 0.5) trends.declining++;
+      else trends.stable++;
+    }
+
+    return trends;
+  }
+
+  findOptimalTimes(data) {
+    const hourlyEnergy = {};
+
+    data.forEach((day) => {
+      if (day.energy && day.timestamp) {
+        const hour = new Date(day.timestamp).getHours();
+        if (!hourlyEnergy[hour]) hourlyEnergy[hour] = [];
+        hourlyEnergy[hour].push(parseFloat(day.energy));
+      }
+    });
+
+    const averageByHour = {};
+    Object.keys(hourlyEnergy).forEach((hour) => {
+      const energies = hourlyEnergy[hour];
+      averageByHour[hour] =
+        energies.reduce((a, b) => a + b, 0) / energies.length;
+    });
+
+    const bestHour = Object.keys(averageByHour).reduce((a, b) =>
+      averageByHour[a] > averageByHour[b] ? a : b
+    );
+
+    return {
+      bestHour: parseInt(bestHour),
+      averageEnergy: averageByHour[bestHour]?.toFixed(1) || 0,
+    };
+  }
+
+  generateWeeklyReport(data) {
+    const report = {
+      totalDays: data.length,
+      averages: {
+        sleep: this.calculateAverageSleep(data),
+        energy: this.calculateAverageEnergy(data),
+        mood: this.calculateAverageMood(data),
+      },
+      trends: this.getEnergyTrends(data),
+      activities: this.getActivitySummary(data),
+      insights: this.generateInsights(data),
+      recommendations: this.generateRecommendations(data),
+    };
+
+    return report;
+  }
+
+  calculateAverageSleep(data) {
+    const sleepData = data.filter((d) => d.bedTime && d.wakeTime);
+    if (sleepData.length === 0) return 0;
+
+    const totalHours = sleepData.reduce((sum, day) => {
+      return sum + this.calculateSleepHours(day.bedTime, day.wakeTime);
+    }, 0);
+
+    return (totalHours / sleepData.length).toFixed(1);
+  }
+
+  calculateAverageEnergy(data) {
+    const energyData = data
+      .filter((d) => d.energy)
+      .map((d) => parseFloat(d.energy));
+    if (energyData.length === 0) return 0;
+
+    return (energyData.reduce((a, b) => a + b, 0) / energyData.length).toFixed(
+      1
+    );
+  }
+
+  calculateAverageMood(data) {
+    const moodData = data.filter((d) => d.mood).map((d) => parseInt(d.mood));
+    if (moodData.length === 0) return 0;
+
+    return (moodData.reduce((a, b) => a + b, 0) / moodData.length).toFixed(1);
+  }
+
+  getActivitySummary(data) {
+    const activityCounts = {};
+
+    data.forEach((day) => {
+      if (day.activities) {
+        day.activities.forEach((activity) => {
+          activityCounts[activity] = (activityCounts[activity] || 0) + 1;
+        });
+      }
+    });
+
+    return Object.entries(activityCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([activity, count]) => ({ activity, count }));
   }
 }
