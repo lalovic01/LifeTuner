@@ -6,84 +6,229 @@ export class DataManager {
 
   static saveDayData(date, dayData) {
     const allData = this.getAllData();
-    allData[date] = dayData;
+    allData[date] = {
+      ...dayData,
+      timestamp: new Date().toISOString(),
+      version: "1.0.0",
+    };
     localStorage.setItem("lifeTunerData", JSON.stringify(allData));
+    this.triggerAutoBackup();
   }
 
   static exportData() {
     const allData = this.getAllData();
-    const dataStr = JSON.stringify(allData, null, 2);
+    const exportData = {
+      appName: "LifeTuner",
+      version: "1.0.0",
+      exportDate: new Date().toISOString(),
+      totalEntries: Object.keys(allData).length,
+      dateRange: this.getDateRange(allData),
+      data: allData,
+      goals: JSON.parse(localStorage.getItem("lifetuner_goals") || "{}"),
+      settings: JSON.parse(localStorage.getItem("lifetuner_settings") || "{}"),
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: "application/json" });
 
     const link = document.createElement("a");
     link.href = URL.createObjectURL(dataBlob);
-    link.download = "lifetuner-data.json";
+    link.download = `lifetuner-backup-${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     link.click();
 
-    return "Podaci su izvezeni!";
+    return "Podaci su izvezeni u JSON formatu!";
   }
 
   static exportDataCSV() {
     const allData = this.getAllData();
-    const days = Object.values(allData);
+    const headers = [
+      "Datum",
+      "Dan u nedelji",
+      "Vreme spavanja",
+      "Vreme buđenja",
+      "Ukupno sati sna",
+      "Raspoloženje (1-5)",
+      "Nivo energije (1-10)",
+      "Aktivnosti",
+      "Broj aktivnosti",
+      "Kvalitet sna",
+      "Produktivnost",
+      "Napomene",
+    ];
 
-    if (days.length === 0) {
-      throw new Error("Nema podataka za izvoz");
-    }
+    const rows = [headers];
 
-    let csv =
-      "Datum,Vreme spavanja,Vreme buđenja,Trajanje sna,Raspoloženje,Energija,Aktivnosti\n";
+    Object.entries(allData).forEach(([date, data]) => {
+      const sleepHours = this.calculateSleepDuration(
+        data.bedTime,
+        data.wakeTime
+      );
+      const dateObj = new Date(date);
+      const dayOfWeek = dateObj.toLocaleDateString("sr-RS", {
+        weekday: "long",
+      });
 
-    days.forEach((day) => {
-      const activities = day.activities ? day.activities.join(";") : "";
-      const mood = day.mood || "";
-      const energy = day.energy || "";
-      const bedTime = day.sleep?.bedTime || "";
-      const wakeTime = day.sleep?.wakeTime || "";
-      const duration = day.sleep?.duration || "";
+      const activities = data.activities || [];
+      const activitiesStr = activities
+        .map((act) => this.translateActivity(act))
+        .join("; ");
 
-      csv += `${day.date},${bedTime},${wakeTime},${duration},${mood},${energy},"${activities}"\n`;
+      const row = [
+        date,
+        dayOfWeek,
+        data.bedTime || "",
+        data.wakeTime || "",
+        sleepHours || "",
+        data.mood || "",
+        data.energy || "",
+        activitiesStr,
+        activities.length,
+        data.sleepQuality || "",
+        data.productivity || "",
+        data.notes || "",
+      ];
+
+      rows.push(row);
     });
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    // Convert to CSV
+    const csvContent = rows
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+
+    // Add BOM for proper UTF-8 encoding in Excel
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "lifetuner-data.csv";
+    link.download = `lifetuner-data-${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     link.click();
 
-    return "CSV podaci su izvezeni!";
+    return "Podaci su izvezeni u CSV formatu!";
+  }
+
+  static calculateSleepDuration(bedTime, wakeTime) {
+    if (!bedTime || !wakeTime) return "";
+
+    const bed = new Date(`2000-01-01 ${bedTime}`);
+    let wake = new Date(`2000-01-01 ${wakeTime}`);
+
+    if (wake < bed) {
+      wake.setDate(wake.getDate() + 1);
+    }
+
+    const diffMs = wake - bed;
+    const hours = diffMs / (1000 * 60 * 60);
+    return hours.toFixed(1);
+  }
+
+  static translateActivity(activity) {
+    const translations = {
+      exercise: "Vežbanje",
+      coffee: "Kafa",
+      social: "Druženje",
+      work: "Rad",
+      reading: "Čitanje",
+      meditation: "Meditacija",
+      walk: "Šetnja",
+      screen: "Korišćenje ekrana",
+      cooking: "Kuvanje",
+      music: "Slušanje muzike",
+      family: "Vreme sa porodicom",
+      hobby: "Hobi aktivnosti",
+    };
+    return translations[activity] || activity;
+  }
+
+  static getDateRange(data) {
+    const dates = Object.keys(data).sort();
+    if (dates.length === 0) return null;
+
+    return {
+      from: dates[0],
+      to: dates[dates.length - 1],
+      totalDays: dates.length,
+      span:
+        Math.floor(
+          (new Date(dates[dates.length - 1]) - new Date(dates[0])) /
+            (1000 * 60 * 60 * 24)
+        ) + 1,
+    };
+  }
+
+  static triggerAutoBackup() {
+    const lastBackup = localStorage.getItem("lifetuner_last_backup");
+    const now = Date.now();
+    const backupInterval = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+    if (!lastBackup || now - parseInt(lastBackup) > backupInterval) {
+      // Auto-backup logic could be implemented here
+      localStorage.setItem("lifetuner_last_backup", now.toString());
+    }
+  }
+
+  static importData(jsonData) {
+    try {
+      const imported = JSON.parse(jsonData);
+
+      if (imported.data) {
+        const existingData = this.getAllData();
+        const mergedData = { ...existingData, ...imported.data };
+        localStorage.setItem("lifeTunerData", JSON.stringify(mergedData));
+      }
+
+      if (imported.goals) {
+        localStorage.setItem("lifetuner_goals", JSON.stringify(imported.goals));
+      }
+
+      return { success: true, message: "Podaci su uspešno uvezeni!" };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Greška pri uvozu podataka: " + error.message,
+      };
+    }
   }
 
   static clearAllData() {
-    localStorage.removeItem("lifeTunerData");
-    localStorage.removeItem("lifetuner_goals");
-    localStorage.removeItem("lifetuner_streak");
-    localStorage.removeItem("recommendation_usage");
-    return "Svi podaci su obrisani";
+    const keys = [
+      "lifeTunerData",
+      "lifetuner_goals",
+      "lifetuner_settings",
+      "lifetuner_reminders",
+      "lifetuner_theme",
+      "lifetuner_visited",
+      "lifetuner_last_backup",
+    ];
+
+    keys.forEach((key) => localStorage.removeItem(key));
+
+    return "Svi podaci su obrisani!";
   }
 
-  static getLast7Days(allData) {
-    const today = new Date();
-    const last7Days = [];
+  static getStorageInfo() {
+    const data = this.getAllData();
+    const dataSize = JSON.stringify(data).length;
+    const totalEntries = Object.keys(data).length;
 
-    for (let i = 0; i < 7; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const dateStr = checkDate.toISOString().split("T")[0];
-
-      if (allData[dateStr]) {
-        last7Days.push(allData[dateStr]);
-      }
-    }
-
-    return last7Days;
-  }
-
-  static parseSleepDuration(duration) {
-    const match = duration.match(/(\d+)h (\d+)m/);
-    if (match) {
-      return parseInt(match[1]) + parseInt(match[2]) / 60;
-    }
-    return 0;
+    return {
+      totalEntries,
+      dataSize: (dataSize / 1024).toFixed(2) + " KB",
+      dateRange: this.getDateRange(data),
+      lastModified: localStorage.getItem("lifetuner_last_backup")
+        ? new Date(
+            parseInt(localStorage.getItem("lifetuner_last_backup"))
+          ).toLocaleDateString()
+        : "Nepoznato",
+    };
   }
 }
