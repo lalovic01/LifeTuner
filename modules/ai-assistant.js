@@ -9,33 +9,51 @@ export class AIAssistant {
           icon: "fa-bed",
           title: "Kratka pauza",
           description: "Odmorite se 15-20 minuta",
+          action: "Postavite alarm i odmorite se",
         },
         {
           icon: "fa-coffee",
-          title: "Popijte kafu",
-          description: "Kofeinski boost za energiju",
+          title: "Kofeinski boost",
+          description: "Popijte kafu ili zeleni čaj",
+          action: "Umereno konzumirajte kofein",
         },
         {
           icon: "fa-walking",
           title: "Kratka šetnja",
           description: "Svež vazduh će vam pomoći",
+          action: "Prošetajte 10-15 minuta napolju",
+        },
+        {
+          icon: "fa-tint",
+          title: "Hidratacija",
+          description: "Dehidracija može uzrokovati umor",
+          action: "Popijte čašu vode",
         },
       ],
       stressed: [
         {
           icon: "fa-leaf",
           title: "Duboko disanje",
-          description: "5 minuta meditacije",
+          description: "4-7-8 tehnika disanja",
+          action: "Udahnite 4s, zadržite 7s, izdahnite 8s",
         },
         {
           icon: "fa-music",
           title: "Opuštajuća muzika",
           description: "Poslušajte omiljene pesme",
+          action: "Pustite umirujuće melodije",
         },
         {
-          icon: "fa-bath",
-          title: "Topla kupka",
-          description: "Opustite se u toploj vodi",
+          icon: "fa-list-alt",
+          title: "Organizujte zadatke",
+          description: "Napravite prioritete",
+          action: "Podelite velike zadatke na manje delove",
+        },
+        {
+          icon: "fa-phone",
+          title: "Pozovite prijatelja",
+          description: "Podelite kako se osećate",
+          action: "Razgovor može pomoći",
         },
       ],
       energetic: [
@@ -43,16 +61,25 @@ export class AIAssistant {
           icon: "fa-dumbbell",
           title: "Vežbanje",
           description: "Iskoristite energiju za aktivnost",
+          action: "20-30 minuta fizičke aktivnosti",
         },
         {
           icon: "fa-tasks",
           title: "Završite zadatke",
           description: "Vreme je za produktivnost",
+          action: "Fokusirajte se na važne projekte",
         },
         {
           icon: "fa-users",
           title: "Socijalizacija",
           description: "Pozovite prijatelje",
+          action: "Organizujte druženje ili poziv",
+        },
+        {
+          icon: "fa-lightbulb",
+          title: "Kreativni projekat",
+          description: "Započnite nešto novo",
+          action: "Koristite energiju za kreativnost",
         },
       ],
       unfocused: [
@@ -60,16 +87,25 @@ export class AIAssistant {
           icon: "fa-mobile-alt",
           title: "Uklonite distrakcije",
           description: "Stavite telefon u drugi mod",
+          action: "Isključite notifikacije",
         },
         {
           icon: "fa-list",
           title: "Napravite listu",
           description: "Organizujte svoje zadatke",
+          action: "Zapišite prioritete za danas",
         },
         {
           icon: "fa-clock",
           title: "Pomodoro tehnika",
           description: "25 min rada, 5 min pauze",
+          action: "Postavite timer i fokusirajte se",
+        },
+        {
+          icon: "fa-home",
+          title: "Promenite okruženje",
+          description: "Nova lokacija može pomoći",
+          action: "Radite iz drugog mesta",
         },
       ],
     };
@@ -85,161 +121,153 @@ export class AIAssistant {
       "Pokret je lek za telo i dušu.",
       "Sve što počnete danas, može promeniti vaš život",
       "Energija koju uložite u sebe, vraća vam se udvostručeno.",
-      "Consistent small steps lead to remarkable transformations.",
-      "Your future self will thank you for the habits you build today.",
-      "Progress, not perfection, is the goal.",
-      "Every expert was once a beginner who refused to give up.",
+      "Mali koraci svaki dan vode ka velikim promenama.",
+      "Vaše buduće ja će vam biti zahvalno za navike koje gradite danas.",
+      "Napredak, ne savršenstvo, je cilj.",
+      "Svaki ekspert je nekada bio početnik koji nije odustao.",
+      "Konzistentnost je majka svih uspeha.",
+      "Zdrave navike su investicija u vašu budućnost.",
     ];
+
+    this.contextualAdvice = {
+      morning: [
+        "Počnite dan sa čašom vode",
+        "5 minuta meditacije može promeniti ceo dan",
+        "Postavite 3 glavna cilja za danas",
+      ],
+      afternoon: [
+        "Vreme je za energetski boost - prošetajte malo",
+        "Proverite kako ste napredovali sa jutarnjim ciljevima",
+        "Kratka pauza će povećati produktivnost",
+      ],
+      evening: [
+        "Spremite se za kvalitetan san",
+        "Razmislite o pozitivnim stvarima dana",
+        "Isključite ekrane sat vremena pre spavanja",
+      ],
+    };
   }
 
-  showRecommendations(currentFeeling) {
-    if (!currentFeeling) {
-      UIComponents.showToast("Prvo izaberite kako se osećate", "warning");
-      return;
+  generatePersonalizedRecommendations(currentFeeling, userData = null) {
+    const baseRecommendations = this.recommendations[currentFeeling] || [];
+
+    // Add contextual recommendations based on time of day
+    const timeOfDay = this.getTimeOfDay();
+    const contextualRecs = this.getContextualRecommendations(timeOfDay);
+
+    // Personalize based on user data if available
+    let personalizedRecs = [...baseRecommendations];
+
+    if (userData) {
+      personalizedRecs = this.personalizeRecommendations(
+        personalizedRecs,
+        userData
+      );
     }
 
-    const allData = DataManager.getAllData();
-    const recentDays = DataManager.getLast7Days(allData);
-    const recommendations = this.generateSmartRecommendations(
-      currentFeeling,
-      recentDays
-    );
-
-    const container = document.getElementById("recommendations");
-    const recContainer = document.getElementById("recommendationsContainer");
-
-    container.innerHTML = "";
-
-    recommendations.forEach((rec) => {
-      const card = document.createElement("div");
-      card.className =
-        "bg-white dark:bg-gray-700 rounded-lg p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-l-4 border-primary";
-      card.innerHTML = `
-        <div class="text-center">
-          <i class="fas ${rec.icon} text-3xl text-primary mb-4"></i>
-          <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">${
-            rec.title
-          }</h4>
-          <p class="text-gray-600 dark:text-gray-300 mb-3">${
-            rec.description
-          }</p>
-          <div class="text-sm text-primary font-medium">${
-            rec.reason || ""
-          }</div>
-        </div>
-      `;
-
-      card.addEventListener("click", () => {
-        UIComponents.showToast(`Odlična ideja! ${rec.title}`, "success");
-        this.trackRecommendationUsage(rec.id);
-      });
-
-      container.appendChild(card);
-    });
-
-    recContainer.classList.remove("hidden");
+    return {
+      primary: personalizedRecs.slice(0, 3),
+      contextual: contextualRecs,
+      timeOfDay: timeOfDay,
+    };
   }
 
-  generateSmartRecommendations(feeling, recentDays) {
-    const baseRecommendations = this.recommendations[feeling] || [];
-    const smartRecommendations = [...baseRecommendations];
+  getTimeOfDay() {
+    const hour = new Date().getHours();
+    if (hour < 12) return "morning";
+    if (hour < 18) return "afternoon";
+    return "evening";
+  }
 
-    // Analyze recent patterns
-    const avgEnergy =
-      recentDays.length > 0
-        ? recentDays
-            .filter((d) => d.energy)
-            .reduce((sum, d) => sum + d.energy, 0) /
-          recentDays.filter((d) => d.energy).length
-        : 5;
+  getContextualRecommendations(timeOfDay) {
+    return this.contextualAdvice[timeOfDay] || [];
+  }
 
-    const avgSleep =
-      recentDays.length > 0
-        ? recentDays
-            .filter((d) => d.sleep?.duration)
-            .reduce(
-              (sum, d) =>
-                sum + DataManager.parseSleepDuration(d.sleep.duration),
-              0
-            ) / recentDays.filter((d) => d.sleep?.duration).length
-        : 7;
+  personalizeRecommendations(recommendations, userData) {
+    // Add logic to personalize recommendations based on user's historical data
+    const recentData = this.getRecentUserData(userData);
 
-    const exerciseFrequency = recentDays.filter((d) =>
-      d.activities?.includes("exercise")
+    if (recentData.lowExercise) {
+      recommendations.unshift({
+        icon: "fa-running",
+        title: "Dodajte fizičku aktivnost",
+        description: "Niste vežbali u poslednje vreme",
+        action: "Kratko vežbanje ili šetnja",
+      });
+    }
+
+    if (recentData.irregularSleep) {
+      recommendations.unshift({
+        icon: "fa-moon",
+        title: "Regulišite san",
+        description: "Vaš raspored spavanja je bio nepravilan",
+        action: "Idite na spavanje u isto vreme",
+      });
+    }
+
+    return recommendations;
+  }
+
+  getRecentUserData(userData) {
+    const recent = Object.values(userData).slice(-7); // Last 7 days
+
+    const exerciseCount = recent.filter(
+      (day) => day.activities && day.activities.includes("exercise")
     ).length;
 
-    if (avgEnergy < 6) {
-      smartRecommendations.push({
-        id: "energy_boost",
-        icon: "fa-bolt",
-        title: "Povećajte energiju",
-        description: "Vaša energija je bila niska u poslednje vreme",
-        reason: `Prosečna energija: ${avgEnergy.toFixed(1)}/10`,
-      });
-    }
+    const sleepTimes = recent
+      .filter((day) => day.bedTime)
+      .map((day) => new Date(`2000-01-01 ${day.bedTime}`).getHours());
 
-    if (avgSleep < 7) {
-      smartRecommendations.push({
-        id: "better_sleep",
-        icon: "fa-bed",
-        title: "Poboljšajte san",
-        description: "Spavate manje od preporučenih 7-9 sati",
-        reason: `Prosečan san: ${avgSleep.toFixed(1)}h`,
-      });
-    }
+    const sleepVariance =
+      sleepTimes.length > 1
+        ? Math.max(...sleepTimes) - Math.min(...sleepTimes)
+        : 0;
 
-    if (exerciseFrequency < 2) {
-      smartRecommendations.push({
-        id: "more_exercise",
-        icon: "fa-dumbbell",
-        title: "Više pokreta",
-        description: "Dodajte fizičku aktivnost u rutinu",
-        reason: `${exerciseFrequency} vežbanja ove nedelje`,
-      });
-    }
-
-    return smartRecommendations.slice(0, 3);
+    return {
+      lowExercise: exerciseCount < 2,
+      irregularSleep: sleepVariance > 2,
+      averageEnergy:
+        recent.reduce((sum, day) => sum + (day.energy || 0), 0) / recent.length,
+    };
   }
 
-  trackRecommendationUsage(recommendationId) {
-    const usage = JSON.parse(
-      localStorage.getItem("recommendation_usage") || "{}"
+  getRandomMotivation() {
+    const randomIndex = Math.floor(
+      Math.random() * this.motivationalQuotes.length
     );
-    usage[recommendationId] = (usage[recommendationId] || 0) + 1;
-    localStorage.setItem("recommendation_usage", JSON.stringify(usage));
+    return this.motivationalQuotes[randomIndex];
   }
 
-  updateDailyMotivation() {
-    const quote =
-      this.motivationalQuotes[
-        Math.floor(Math.random() * this.motivationalQuotes.length)
-      ];
-    const motivationEl = document.getElementById("dailyMotivation");
-    if (motivationEl) {
-      motivationEl.textContent = quote;
-    }
-  }
-
-  checkMissedDays() {
-    const allData = DataManager.getAllData();
+  getTodaysMotivation() {
     const today = new Date();
-    const twoDaysAgo = new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const dayOfYear = Math.floor(
+      (today - new Date(today.getFullYear(), 0, 0)) / 86400000
+    );
+    return this.motivationalQuotes[dayOfYear % this.motivationalQuotes.length];
+  }
 
-    const recentDays = [];
-    for (let d = new Date(twoDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
-      recentDays.push(d.toISOString().split("T")[0]);
+  generateDailyInsight(userData) {
+    if (!userData || Object.keys(userData).length === 0) {
+      return "Počnite sa unosom podataka da biste dobili personalizovane uvide!";
     }
 
-    const missedDays = recentDays.filter((date) => !allData[date]);
+    const recentData = Object.values(userData).slice(-7);
+    const avgEnergy =
+      recentData.reduce((sum, day) => sum + (day.energy || 0), 0) /
+      recentData.length;
+    const exerciseDays = recentData.filter(
+      (day) => day.activities && day.activities.includes("exercise")
+    ).length;
 
-    if (missedDays.length >= 2) {
-      setTimeout(() => {
-        UIComponents.showToast(
-          "Niste uneli podatke već 2+ dana. Ne zaboravite da pratite svoje navike!",
-          "warning",
-          5000
-        );
-      }, 2000);
+    if (avgEnergy > 7 && exerciseDays >= 3) {
+      return "Odlično! Vaša energija je visoka i redovno vežbate. Nastavite tako! 💪";
+    } else if (avgEnergy < 5) {
+      return "Primetili smo da vam je energija niska. Pokušajte sa više spavanja i fizičke aktivnosti. 🌙";
+    } else if (exerciseDays < 2) {
+      return "Dodavanje malo više fizičke aktivnosti može značajno poboljšati vašu energiju i raspoloženje. 🏃‍♂️";
     }
+
+    return "Kontinuirano praćenje navika vam pomaže da bolje razumete sebe. Nastavite sa unosom! 📊";
   }
 }
